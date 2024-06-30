@@ -62,6 +62,7 @@ def tcp_server(tcp_addr, settings):
   """Start up the tcp server, send the settings."""
   family = socket.AF_INET6 if ":" in tcp_addr.ip else socket.AF_INET
   sock = socket.socket(family, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+  # tcp_addr = ("0.0.0.0", tcp_addr.port)
   sock.bind(tcp_addr)
   sock.listen(1)
   logging.info("Waiting for connection on %s", tcp_addr)
@@ -289,7 +290,7 @@ class LanSC2Env(sc2_env.SC2Env):
     self._action_delay_fns = [None]
 
     interface = self._get_interface(
-        agent_interface_format=agent_interface_format, require_raw=visualize)
+        interface_format=agent_interface_format, require_raw=visualize)
 
     self._launch_remote(host, config_port, race, name, interface,
                         agent_interface_format)
@@ -343,6 +344,11 @@ class LanSC2Env(sc2_env.SC2Env):
     self._features = [features.features_from_game_info(
         game_info=self._game_info[0],
         agent_interface_format=agent_interface_format)]
+    self._requested_races = {
+        info.player_id: info.race_requested
+        for info in self._game_info[0].player_info
+        if info.type != sc_pb.Observer
+    }
 
   def _restart(self):
     # Can't restart since it's not clear how you'd coordinate that with the
